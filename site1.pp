@@ -1,12 +1,20 @@
+mysql::db { foreman:
+ user     => foreman,
+ password => changemeDB,
+ host     => localhost,
+ grant    => ['ALL'],
+#  notify   => Foreman::Rake['db:migrate'],
+}~>
+
 class { '::foreman':
   db_type => mysql,
   db_host => localhost,
   db_port => 3306,
-  db_manage => true,
+  db_manage => false,
   db_adapter => mysql2,
   db_database => foreman,
   db_username => foreman,
-  db_password => 'changeme',
+  db_password => 'changemeDB',
   admin_username => admin,
   admin_password => 'changemea',
   authentication => true,
@@ -26,13 +34,24 @@ class { '::foreman':
   group => foreman,
   #passenger => true,
   puppetrun => true,
-}
+}~>
+
+
+
+
+foreman_config_entry { 'db_pending_migration':
+     value => false,
+     dry   => true,
+   } ~>
+foreman::rake { 'db:migrate':
+ user     => 'root',
+ app_root => '/usr/share/foreman',
+}~> 
 
 class { '::foreman::puppetmaster':
 foreman_user => 'admin',
 foreman_password => 'changemea',
 #passenger => true,
-
 }
 
 class { '::foreman_proxy':
@@ -46,9 +65,6 @@ class { '::foreman_proxy':
   dns => false,
   bmc => false,
   realm => false,
-# puppet_use_environment_api => true,
-# registered_proxy_url => 'https://node-17.domain.tld:8443',
-# registered_name => 'localhost',
   register_in_foreman => true,
   foreman_base_url => "https://node-15.domain.tld",
   oauth_consumer_key => WvZpMupBEGZPj6RXXZBprvUKg6kSNM5e,
