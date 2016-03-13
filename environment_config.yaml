@@ -123,6 +123,13 @@ attributes:
       source: '^[A-Za-z0-9]*$'
       error: "Valid option is a sequence of letters and digits"
 
+  own_ssl_certificate: # Checkbox
+    description:
+    label: "Use own certificates on LCM nodes and point paths for it"
+    type: "checkbox"
+    value: false
+    weight: 565
+
   ssl_ca_location:
     value: '/var/lib/puppet/ssl/certs/ca.pem'
     label: "SSL CA location"
@@ -153,12 +160,6 @@ attributes:
       source: '^/[-A-Za-z0-9_./]*$'
       error: "Valid option is a sequence of letters"
 
-  own_ssl_certificate: # Checkbox
-    description:
-    label: "Use own certificates on LCM nodes and point paths for it"
-    type: "checkbox"
-    value: false
-    weight: 598
 
   db_user:
     value: 'foreman'
@@ -182,8 +183,8 @@ attributes:
 
 #foreman_proxy:
   tftp:  # (boolean to turn on tftp or not)
-    description: 
-    label: "Use foreman TFTP""
+    description:  
+    label: "Use foreman TFTP"
     type: "checkbox"
     value: false
     weight: 620
