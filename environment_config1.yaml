@@ -1,0 +1,338 @@
+attributes:
+# MariaDB
+  mariadb_root_password:
+    label: "MariaDB root password"
+    description: "If leave this field empty, the password will be generated automatically"
+    type: "password"
+    value: ""
+    weight: 10
+  mariadb_check_password:
+    label: "MariaDB check password"
+    description: "If leave this field empty, the password will be generated automatically"
+    type: "password"
+    value: ""
+    weight: 20
+
+# HAProxy
+  ha_puppet_options:
+    description: "The options for haproxy of service Puppet Master"
+    label: "Puppet HA options"
+    type: "text"
+    value: "tcpka"
+    weight: 50
+  ha_mariadb_options:
+    description: "The options for haproxy of service Mariadb"
+    label: "Mariadb HA options"
+    type: "text"
+    value: "'tcplog', 'clitcpka', 'srvtcpka'"
+    weight: 60
+  lcm_ha_foreman_443_options:
+    description: "The options for haproxy of service Foreman on 443"
+    label: "Foreman on 443 HA options"
+    type: "text"
+    value: "'httplog', 'httpclose'"
+    weight: 70
+  lcm_ha_foreman_8443_options:
+    description: "The options for haproxy of service Foreman on 8443"
+    label: "Foreman on 8443 HA options"
+    type: "text"
+    value: "'httplog', 'httpclose'"
+    weight: 72
+  lcm_ha_foreman_80_options:
+    description: "The options for haproxy of service Foreman on 80"
+    label: "Foreman on 80 HA options"
+    type: "text"
+    value: "'httplog', 'httpclose'"
+    weight: 74
+  lcm_ha_middleware_options:
+    description: "The options for haproxy of service Middleware"
+    label: "Middleware HA options"
+    type: "text"
+    value: "'httplog', 'httpclose'"
+    weight: 80
+
+# Keepalived
+  keepalived_cidr:
+    value: '10.255.0.0/16'
+    label: 'Keepalived CIDR'
+    description: 'The CIDR for keepalived daemons. It would be bridged into management network and must not interfere with management CIDR'
+    weight: 30
+    type: "text"
+    regex:
+      source: '^(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\/([1-9]|[1-2]\d|3[0-2])$'
+      error: "Invalid CIDR"
+  public_vip_enabled:
+    description: "Enable public vip reservation for LCM webui"
+    label: "Enable public vip reservation for LCM webui"
+    type: "checkbox"
+    value: false
+    weight: 32
+
+########################## Fuel Puppetmaster plugin params:   https://gist.github.com/sbrimhall/79997bd90c7e5eca9e2f   ###########################################
+#foreman:
+  foreman_user:
+    value: 'admin'
+    label: 'Foreman user'
+    type: "text"
+    description:
+    weight: 510
+    regex:
+      source: '^[A-Za-z]*$'
+      error: "Valid option is a sequence of letters"
+
+  foreman_password:
+    value: 'changeme'
+    label: 'Foreman pass'
+    type: "text"
+    description:
+    weight: 520
+    regex:
+      source: '^[A-Za-z]*$'
+      error: "Valid option is a sequence of letters"
+
+  deploy_user:
+    value: 'deploy_user'
+    label: 'Operator username'
+    type: "text"
+    description:
+    weight: 530
+    regex:
+      source: '^[_A-Za-z]*$'
+      error: "Valid option is a sequence of letters and underscore"
+
+  deploy_password:
+    value: 'deploy_password'
+    label: 'Operator password'
+    type: "text"
+    description:
+    weight: 540
+    regex:
+      source: '^[_A-Za-z0-9]*$'
+      error: "Valid option is a sequence of letters and digits"
+
+  oauth_consumer_key:
+    value: 'WvZpMupBEGZPj6RXXZBprvUKg6kSNM5e'
+    label: 'Oauth consumer key'
+    type: "text"
+    description:
+    weight: 550
+    regex:
+      source: '^[A-Za-z0-9]*$'
+      error: "Valid option is a sequence of letters and digits"
+
+  oauth_consumer_secret:
+    value: 'EiwMYSN78wKxQETrqB7rhCWBn9HcXV3x'
+    label: 'Oauth consumer secret'
+    type: "text"
+    description:
+    weight: 560
+    regex:
+      source: '^[A-Za-z0-9]*$'
+      error: "Valid option is a sequence of letters and digits"
+
+  ssl_ca_location:
+    value: '/var/lib/puppet/ssl/certs/ca.pem'
+    label: "SSL CA location"
+    type: "text"
+    description:
+    weight: 570
+    regex:
+      source: '^[A-Za-z0-9_-/.]*$'
+      error: "Valid option is a sequence of letters"
+
+  ssl_cert_location:
+    value: '/var/lib/puppet/ssl/certs/node-7.domain.tld.pem'
+    label: "SSL CERT location"
+    type: "text"
+    description:
+    weight: 580
+    regex:
+      source: '^[A-Za-z0-9_-/.]*$'
+      error: "Valid option is a sequence of letters"
+
+  ssl_crl_location:
+    value: '/var/lib/puppet/ssl/crl.pem'
+    label: "SSL CRL location"
+    type: "text"
+    description:
+    weight: 590
+    regex:
+      source: '^[A-Za-z0-9_-/.]*$'
+      error: "Valid option is a sequence of letters"
+
+  own_ssl_certificate: # Checkbox
+    description: "Load own certificates on LCM nodes and point paths for it"
+    label: "Use own certificates"
+    type: "checkbox"
+    value: false
+    weight: 598
+
+  db_user:
+    value: 'foreman'
+    label: "DB username"
+    type: "text"
+    description:
+    weight: 600
+    regex:
+      source: '^[A-Za-z]*$'
+      error: "Valid option is a sequence of letters"
+
+  db_pass:
+    value: 'changeme' 
+    label: "DB password"
+    type: "text"
+    description:
+    weight: 610
+    regex:
+      source: '^[A-Za-z]*$'
+      error: "Valid option is a sequence of letters"
+
+#foreman_proxy:
+  tftp:  # (boolean to turn on tftp or not)
+    description: "Use foreman TFTP"
+    label: "tftp"
+    type: "checkbox"
+    value: false
+    weight: 620
+  dhcp:  # (boolean for dhcp)
+    description: "Use foreman DHCP"
+    label: "dhcp"
+    type: "checkbox"
+    value: false
+    weight: 630
+  dns:   # (boolean for dns)
+    description: "Use foreman DNS"
+    label: "dns"
+    type: "checkbox"
+    value: false
+    weight: 640
+  bmc:   # (boolean for IPMI plugin)
+    description: "Use foreman IPMI plugin"
+    label: "IPMI plugin"
+    type: "checkbox"
+    value: false
+    weight: 650
+
+  puppet_ssl_ca_location:
+    value: '/var/lib/puppet/ssl/certs/ca.pem'
+    label: "puppet ssl ca location"
+    type: "text"
+    description:
+    weight: 660
+    regex:
+      source: '^[A-Za-z0-9_-/.]*$'
+      error: "Valid option is a sequence of letters"
+
+  puppet_ssl_cert:
+    value: '/var/lib/puppet/ssl/certs/node-7.domain.tld.pem'
+    label: "puppet ssl cert"
+    type: "text"
+    description:
+    weight: 670
+    regex:
+      source: '^[A-Za-z0-9_-/.]*$'
+      error: "Valid option is a sequence of letters"
+
+  puppet_ssl_key:
+    value: '/var/lib/puppet/ssl/private_keys/node-7.domain.tld.pem'
+    label: "puppet ssl key"
+    type: "text"
+    description:
+    weight: 680
+    regex:
+      source: '^[A-Za-z0-9_-/.]*$'
+      error: "Valid option is a sequence of letters"
+
+  foreman_base_url:
+    value: 'localhost'
+    label: "Foreman base url"
+    type: "text"
+    description:
+    weight: 690
+    regex:
+      source: '^[A-Za-z_-/:0-9]*$'
+      error: "Valid option is a sequence of letters"
+
+  oauth_effective_user:
+    value: 'admin'
+    label: "Oauth effective user"
+    type: "text"
+    description:
+    weight: 700
+    regex:
+      source: '^[A-Za-z]*$'
+      error: "Valid option is a sequence of letters"
+#    - oauth consumer key  #Hide?
+#    - oauth consumer secret  #Hide?
+
+#puppet:
+  puppetmaster_fqdn:
+    value: 'STUB1'
+    label: 'puppetmaster fqdn'
+    type: "text"
+    description:
+    weight: 885
+    regex:
+      source: '^[A-Za-z]*$'
+      error: "Valid option is a sequence of letters"
+
+  ca_server_fqdn:
+    value: 'STUB'
+    label: 'ca server fqdn'
+    type: "text"
+    description:
+    weight: 886
+    regex:
+      source: '^[A-Za-z]*$'
+      error: "Valid option is a sequence of letters"
+
+  foreman_url:
+    value: 'STUB'
+    label: 'foreman url'
+    type: "text"
+    description:
+    weight: 887
+    regex:
+      source: '^[A-Za-z]*$'
+      error: "Valid option is a sequence of letters"
+
+  dns_alt_names: # (alternate names to allow to be valid for a cert. puppet,puppet1.fqdn,puppetca, etc)
+    value: 'STUB'
+    label: 'dns_alt_names'
+    type: "text"
+    description:
+    weight: 888
+    regex:
+      source: '^[A-Za-z]*$'
+      error: "Valid option is a sequence of letters"
+
+#r10k:
+  remote_repo: #(location of control repo)
+    value: 'STUB'
+    label: 'r10k remote repo'
+    type: "text"
+    description: 'location of control repo'
+    weight: 889
+    regex:
+      source: '^[A-Za-z]*$'
+      error: "Valid option is a sequence of letters"
+
+  deploy_key:  # (if not using https/oauth to clone repo)
+    value: 'STUB'
+    label: 'r10k deploy key'
+    type: "text"
+    description: 'if not using https/oauth to clone repo'
+    weight: 890
+    regex:
+      source: '^[A-Za-z]*$'
+      error: "Valid option is a sequence of letters"
+
+#middleware:
+#    ssh_private_key:
+#    ssh_public_key:
+#    deploy_user:
+#    deploy_pass:
+  
+
+
+
