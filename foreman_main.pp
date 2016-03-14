@@ -68,7 +68,7 @@ class { '::foreman':
 }
 # validate_re($environment, ['^productio$', '^smtp$'], "email_delivery_method can be either sendmail or smtp, not")
 
-class { '::foreman_wrapper':
+class { '::foreman_ext':
   db_type => mysql,
   db_host => localhost, #$fqdn,
   db_port => 3306,
