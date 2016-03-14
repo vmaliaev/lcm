@@ -125,40 +125,55 @@ attributes:
 
   own_ssl_certificate: # Checkbox
     description:
-    label: "Use own certificates on LCM nodes and point paths for it"
+    label: "Use custom certificates on LCM nodes."
     type: "checkbox"
     value: false
     weight: 565
 
   ssl_ca_location:
-    value: '/var/lib/puppet/ssl/certs/ca.pem'
+    value: "" 
     label: "SSL CA location"
     type: "text"
-    description:
+    description: |
+           Provide a path to custom SSL CA. 
+           (Ex: /var/lib/puppet/ssl/certs/ca.pem)
     weight: 570
+    restrictions:
+      - condition: "settings:fuel-plugin-lcm.own_ssl_certificate.value != true"
+        action: "disable"
     regex:
-      source: '^/[-A-Za-z0-9_./]*$'
-      error: "Valid option is a sequence of letters"
+      source: '^(/[-A-Za-z0-9_./]*|^)$'
+      error: "Non valid option. Wrong symbol."
 
   ssl_cert_location:
-    value: '/var/lib/puppet/ssl/certs/node-7.domain.tld.pem'
+    value: ""
     label: "SSL CERT location"
     type: "text"
-    description:
+    description: |
+            Provide a path to custom SSL CERT. 
+            Ex: /var/lib/puppet/ssl/certs/fuel.domain.tld.pem
     weight: 580
+    restrictions:
+      - condition: "settings:fuel-plugin-lcm.own_ssl_certificate.value != true"
+        action: "disable"
     regex:
-      source: '^/[-A-Za-z0-9_./]*$'
-      error: "Valid option is a sequence of letters"
+      source: '^(/[-A-Za-z0-9_./]*|^)$'
+      error: "Non valid option. Wrong symbol."
 
   ssl_crl_location:
-    value: '/var/lib/puppet/ssl/crl.pem'
+    value: ""
     label: "SSL CRL location"
     type: "text"
-    description:
+    description: | 
+           Provide a path to custom SSL CRL. 
+           Ex.: /var/lib/puppet/ssl/crl.pem
     weight: 590
+    restrictions:
+      - condition: "settings:fuel-plugin-lcm.own_ssl_certificate.value != true"
+        action: "disable"
     regex:
-      source: '^/[-A-Za-z0-9_./]*$'
-      error: "Valid option is a sequence of letters"
+      source: '^(/[-A-Za-z0-9_./]*|^)$'
+      error: "Non valid option. Wrong symbol."
 
 
   db_user:
