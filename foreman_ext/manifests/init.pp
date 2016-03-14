@@ -2,7 +2,7 @@
 #
 # === Parameters:
 #
-# All the parameters look at ::foreman::init.pp
+# All the parameter descriptions look at ::foreman::init.pp
 #
 
 class foreman_ext (
