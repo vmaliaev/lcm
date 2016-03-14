@@ -157,6 +157,8 @@ class foreman_ext (
     } ~>
     Class['foreman::service']
 
+    notify {'run apipie': notify => Foreman::Rake["$::foreman::apipie_task"], } # It is important for prepopulated database foreman
+
 #    class { '::foreman::service': }
 ##############################################################################
   # Anchor these separately so as not to break
