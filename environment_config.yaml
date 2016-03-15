@@ -65,22 +65,22 @@ attributes:
 #foreman:
   foreman_user:
     value: 'admin'
-    label: 'Foreman user'
+    label: 'Foreman username'
     type: "text"
     description:
     weight: 510
     regex:
-      source: '^[A-Za-z]*$'
-      error: "Valid option is a sequence of letters"
+      source: &letdig_regex '^[A-Za-z0-9]*$'
+      error: "Valid option is a sequence of letters and digits"
 
   foreman_password:
     value: 'changeme'
-    label: 'Foreman pass'
+    label: 'Foreman password'
     type: "text"
     description:
     weight: 520
     regex:
-      source: '^[A-Za-z]*$'
+      source: *letdig_regex
       error: "Valid option is a sequence of letters"
 
   deploy_user:
@@ -90,8 +90,11 @@ attributes:
     description:
     weight: 530
     regex:
-      source: '^[_A-Za-z]*$'
+      source: *letdig_regex
       error: "Valid option is a sequence of letters and underscore"
+    restrictions:
+      - condition: "true" 
+        action: "disable"
 
   deploy_password:
     value: 'deploy_password'
@@ -100,17 +103,23 @@ attributes:
     description:
     weight: 540
     regex:
-      source: '^[_A-Za-z0-9]*$'
+      source: *letdig_regex
       error: "Valid option is a sequence of letters and digits"
+    restrictions:
+      - condition: "true" 
+        action: "disable"
 
   oauth_consumer_key:
     value: 'WvZpMupBEGZPj6RXXZBprvUKg6kSNM5e'
     label: 'Oauth consumer key'
     type: "text"
-    description:
+    description: |
+      Oauth key and secret values fom your Foreman instance
+      You can retrieve them later from
+      Foreman Administer > Settings > Auth
     weight: 550
     regex:
-      source: '^[A-Za-z0-9]*$'
+      source: *letdig_regex
       error: "Valid option is a sequence of letters and digits"
 
   oauth_consumer_secret:
@@ -120,7 +129,7 @@ attributes:
     description:
     weight: 560
     regex:
-      source: '^[A-Za-z0-9]*$'
+      source: *letdig_regex
       error: "Valid option is a sequence of letters and digits"
 
   own_ssl_certificate: # Checkbox
@@ -135,14 +144,14 @@ attributes:
     label: "SSL CA location"
     type: "text"
     description: |
-           Provide a path to custom SSL CA. 
-           (Ex: /var/lib/puppet/ssl/certs/ca.pem)
+      Provide a path to custom SSL CA. 
+      Ex: /var/lib/puppet/ssl/certs/ca.pem
     weight: 570
     restrictions:
       - condition: "settings:fuel-plugin-lcm.own_ssl_certificate.value != true"
         action: "disable"
     regex:
-      source: '^(/[-A-Za-z0-9_./]*|^)$'
+      source: &file_path '^(/[-A-Za-z0-9_./]*|^)$'
       error: "Non valid option. Wrong symbol."
 
   ssl_cert_location:
@@ -150,14 +159,14 @@ attributes:
     label: "SSL CERT location"
     type: "text"
     description: |
-            Provide a path to custom SSL CERT. 
-            Ex: /var/lib/puppet/ssl/certs/fuel.domain.tld.pem
+      Provide a path to custom SSL CERT. 
+      Ex: /var/lib/puppet/ssl/certs/fuel.domain.tld.pem
     weight: 580
     restrictions:
       - condition: "settings:fuel-plugin-lcm.own_ssl_certificate.value != true"
         action: "disable"
     regex:
-      source: '^(/[-A-Za-z0-9_./]*|^)$'
+      source: *file_path
       error: "Non valid option. Wrong symbol."
 
   ssl_crl_location:
@@ -165,14 +174,14 @@ attributes:
     label: "SSL CRL location"
     type: "text"
     description: | 
-           Provide a path to custom SSL CRL. 
-           Ex.: /var/lib/puppet/ssl/crl.pem
+      Provide a path to custom SSL CRL. 
+      Ex.: /var/lib/puppet/ssl/crl.pem
     weight: 590
     restrictions:
       - condition: "settings:fuel-plugin-lcm.own_ssl_certificate.value != true"
         action: "disable"
     regex:
-      source: '^(/[-A-Za-z0-9_./]*|^)$'
+      source: *file_path
       error: "Non valid option. Wrong symbol."
 
 
@@ -180,20 +189,20 @@ attributes:
     value: 'foreman'
     label: "DB username"
     type: "text"
-    description:
+    description: "Database 'production' user"
     weight: 600
     regex:
-      source: '^[A-Za-z]*$'
+      source: *letdig_regex
       error: "Valid option is a sequence of letters"
 
   db_pass:
     value: 'changeme' 
     label: "DB password"
     type: "text"
-    description:
+    description: "Database 'production' password"
     weight: 610
     regex:
-      source: '^[A-Za-z]*$'
+      source: *letdig_regex
       error: "Valid option is a sequence of letters"
 
 #foreman_proxy:
@@ -341,3 +350,4 @@ attributes:
 #    ssh_public_key:
 #    deploy_user:
 #    deploy_pass:
+#
