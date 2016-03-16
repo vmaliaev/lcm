@@ -144,7 +144,7 @@ attributes:
     label: "SSL CA location"
     type: "text"
     description: |
-      Provide path to custom SSL CA. 
+      Provide a path to custom SSL CA. 
       Ex: /var/lib/puppet/ssl/certs/ca.pem
     weight: 570
     restrictions:
@@ -159,7 +159,7 @@ attributes:
     label: "SSL CERT location"
     type: "text"
     description: |
-      Provide path to custom SSL CERT. 
+      Provide a path to custom SSL CERT. 
       Ex: /var/lib/puppet/ssl/certs/fuel.domain.tld.pem
     weight: 580
     restrictions:
@@ -174,7 +174,7 @@ attributes:
     label: "SSL CRL location"
     type: "text"
     description: | 
-      Provide path to custom SSL CRL. 
+      Provide a path to custom SSL CRL. 
       Ex.: /var/lib/puppet/ssl/crl.pem
     weight: 590
     restrictions:
@@ -206,104 +206,148 @@ attributes:
       error: "Valid option is a sequence of letters"
 
 #foreman_proxy:
-  own_puppet_certificate: # Checkbox
-    description:
-    label: "Use custom puppet certificates on LCM nodes."
-    type: "checkbox"
-    value: false
-    weight: 650
-
-  puppet_ssl_ca_location:
-    value: ''
-    label: "Puppet ssl ca location"
-    type: "text"
-    description: |
-      Provide path to custom SSL CA. 
-      Ex: /var/lib/puppet/ssl/certs/ca.pem
-    weight: 660
-    restrictions:
-      - condition: "settings:fuel-plugin-lcm.own_puppet_certificate.value != true"
-        action: "disable"
-    regex:
-      source: *file_path
-      error: "Non valid option. Wrong symbol."
-
-  puppet_ssl_cert:
-    value: ''
-    label: "Puppet ssl cert"
-    type: "text"
-    description: |
-      Provide path to custom SSL CERT. 
-      Ex: /var/lib/puppet/ssl/certs/fuel.domain.tld.pem
-    weight: 670
-    restrictions:
-      - condition: "settings:fuel-plugin-lcm.own_puppet_certificate.value != true"
-        action: "disable"
-    regex:
-      source: *file_path
-      error: "Non valid option. Wrong symbol."
-
-  puppet_ssl_key:
-    value: ''
-    label: "Puppet ssl key"
-    type: "text"
-    description: |
-      Provide path to custom SSL KEY. 
-      Ex: /var/lib/puppet/ssl/private_keys/fuel.domain.tld.pem
-    weight: 680
-    restrictions:
-      - condition: "settings:fuel-plugin-lcm.own_puppet_certificate.value != true"
-        action: "disable"
-    regex:
-      source:  *file_path
-      error: "Non valid option. Wrong symbol."
-
-  foreman_base_url:
-    value: 'localhost'
-    label: "Foreman base url"
-    type: "text"
-    description: |
-      Smart proxy needs to know
-      where Foreman API lives
-    weight: 690
-    regex:
-      source:  '^[-A-Za-z0-9_:./]*$' 
-      error: "Non valid option. Wrong symbol."
-
-  oauth_effective_user:
-    value: 'admin'
-    label: "Oauth effective user"
-    type: "text"
-    description: "User to be used for REST interaction"
-    weight: 700
-    regex:
-      source: '^[A-Za-z0-9]*$'
-      error: "Valid option is a sequence of letters and digits"
-#    - oauth consumer key  #Hide?
-#    - oauth consumer secret  #Hide?
-
   tftp:  # (boolean to turn on tftp or not)
     description:  
     label: "Use foreman TFTP"
     type: "checkbox"
     value: false
-    weight: 720
+    weight: 620
   dhcp:  # (boolean for dhcp)
     description: 
     label: "Use foreman DHCP"
     type: "checkbox"
     value: false
-    weight: 730
+    weight: 630
   dns:   # (boolean for dns)
     description: 
     label: "Use foreman DNS"
     type: "checkbox"
     value: false
-    weight: 740
+    weight: 640
   bmc:   # (boolean for IPMI plugin)
     description: 
     label: "Use foreman IPMI plugin"
     type: "checkbox"
     value: false
-    weight: 750
+    weight: 650
 
+  puppet_ssl_ca_location:
+    value: '/var/lib/puppet/ssl/certs/ca.pem'
+    label: "puppet ssl ca location"
+    type: "text"
+    description:
+    weight: 660
+    regex:
+      source: '^/[-A-Za-z0-9_./]*$'
+      error: "Valid option is a sequence of letters"
+
+  puppet_ssl_cert:
+    value: '/var/lib/puppet/ssl/certs/node-7.domain.tld.pem'
+    label: "puppet ssl cert"
+    type: "text"
+    description:
+    weight: 670
+    regex:
+      source:  '^/[-A-Za-z0-9_./]*$'
+      error: "Valid option is a sequence of letters"
+
+  puppet_ssl_key:
+    value: '/var/lib/puppet/ssl/private_keys/node-7.domain.tld.pem'
+    label: "puppet ssl key"
+    type: "text"
+    description:
+    weight: 680
+    regex:
+      source:  '^/[-A-Za-z0-9_./]*$'
+      error: "Valid option is a sequence of letters"
+
+  foreman_base_url:
+    value: 'localhost'
+    label: "Foreman base url"
+    type: "text"
+    description:
+    weight: 690
+    regex:
+      source:  '^[-A-Za-z0-9_./]*$' 
+      error: "Valid option is a sequence of letters"
+
+  oauth_effective_user:
+    value: 'admin'
+    label: "Oauth effective user"
+    type: "text"
+    description:
+    weight: 700
+    regex:
+      source: '^[A-Za-z]*$'
+      error: "Valid option is a sequence of letters"
+#    - oauth consumer key  #Hide?
+#    - oauth consumer secret  #Hide?
+
+#puppet:
+  puppetmaster_fqdn:
+    value: 'STUB'
+    label: 'puppetmaster fqdn'
+    type: "text"
+    description:
+    weight: 885
+    regex:
+      source: '^[A-Za-z]*$'
+      error: "Valid option is a sequence of letters"
+
+  ca_server_fqdn:
+    value: 'STUB'
+    label: 'ca server fqdn'
+    type: "text"
+    description:
+    weight: 886
+    regex:
+      source: '^[A-Za-z]*$'
+      error: "Valid option is a sequence of letters"
+
+  foreman_url:
+    value: 'STUB'
+    label: 'foreman url'
+    type: "text"
+    description:
+    weight: 887
+    regex:
+      source: '^[A-Za-z]*$'
+      error: "Valid option is a sequence of letters"
+
+  dns_alt_names: # (alternate names to allow to be valid for a cert. puppet,puppet1.fqdn,puppetca, etc)
+    value: 'STUB'
+    label: 'dns_alt_names'
+    type: "text"
+    description:
+    weight: 888
+    regex:
+      source: '^[A-Za-z]*$'
+      error: "Valid option is a sequence of letters"
+
+#r10k:
+  remote_repo: #(location of control repo)
+    value: 'STUB'
+    label: 'r10k remote repo'
+    type: "text"
+    description: 'location of control repo'
+    weight: 889
+    regex:
+      source: '^[A-Za-z]*$'
+      error: "Valid option is a sequence of letters"
+
+  deploy_key:  # (if not using https/oauth to clone repo)
+    value: 'STUB'
+    label: 'r10k deploy key'
+    type: "text"
+    description: 'if not using https/oauth to clone repo'
+    weight: 890
+    regex:
+      source: '^[A-Za-z]*$'
+      error: "Valid option is a sequence of letters"
+
+#middleware:
+#    ssh_private_key:
+#    ssh_public_key:
+#    deploy_user:
+#    deploy_pass:
+#
