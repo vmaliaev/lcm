@@ -5,7 +5,7 @@
 # All the parameter descriptions are placed in ::foreman::init.pp
 #
 
-class foreman_ext (
+class plugin_lcm::foreman_ext (
   $foreman_url               = $::foreman::params::foreman_url,
   $puppetrun                 = $::foreman::params::puppetrun,
   $unattended                = $::foreman::params::unattended,
