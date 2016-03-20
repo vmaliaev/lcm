@@ -1,4 +1,4 @@
-
+#
 notice('PLUGIN: fuel-plugin-lcm/foreman_main.pp')
 
 $roles                   = hiera('roles')
@@ -38,6 +38,10 @@ mysql::db { $dbname:
 #    password => $::foreman::db_password,
 #  }
 
+concat::fragment { 'Apache ports header1':
+    target  => '/etc/apache2/ports.conf', #""$ports_file,
+    content => "Listen 8140\n",
+}
 
 class { '::foreman':
   db_type => mysql,
