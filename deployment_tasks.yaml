@@ -17,7 +17,8 @@
     - puppet_master
     - mariadb_galera
     - hiera_apache
-    - foreman_main 
+    - foreman_main
+    - hiera_apache_rm
   parameters:
     strategy:
       type: one_by_one
@@ -121,10 +122,21 @@
 - id: foreman_main
   type: puppet
   role: [primary-lcm, lcm]
-  required_for: [deploy_end]
+  required_for: [hiera_apache_rm]
   requires: [hiera_apache]
   parameters:
     puppet_manifest: puppet/manifests/foreman_main.pp
+    puppet_modules: puppet/modules:/etc/puppet/modules
+    timeout: 3600
+
+
+- id: hiera_apache_rm
+  type: puppet
+  role: [primary-lcm, lcm]
+  required_for: [deploy_end]
+  requires: [foreman_main]
+  parameters:
+    puppet_manifest: puppet/manifests/hiera_apache_rm.pp
     puppet_modules: puppet/modules:/etc/puppet/modules
     timeout: 3600
 

@@ -26,6 +26,8 @@ $oauth_consumer_secret	  = $lcm_hiera_values['oauth_consumer_secret'] #TODO: add
 
 $foreman_base_url	  = $lcm_hiera_values['foreman_base_url'] #TODO: add $( hostname -f)
 
+include ::plugin_lcm
+$lcm_apache_ports = $::plugin_lcm::lcm_apache_ports
 # TODO: Change the following resource parameters or move it to init.pp !!!!!!!
 mysql::db { $dbname:
  user     => $db_user,
@@ -38,10 +40,16 @@ mysql::db { $dbname:
 #    password => $::foreman::db_password,
 #  }
 
-concat::fragment { 'Apache ports header1':
-    target  => '/etc/apache2/ports.conf', #""$ports_file,
-    content => "Listen 8140\n",
+#concat::fragment { 'Apache ports header1':
+#    target  => '/etc/apache2/ports.conf', #""$ports_file,
+#    content => "Listen 8140\n",
+#}
+#include apache::listen
+
+#$lcm_apache_ports = $::plugin_lcm::lcm_apache_ports
+apache::listen {$lcm_apache_ports: 
 }
+
 
 class { '::foreman':
   db_type => mysql,
