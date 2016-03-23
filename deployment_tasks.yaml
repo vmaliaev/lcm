@@ -14,11 +14,6 @@
     - netconfig
     - hosts
     - firewall
-    - puppet_master
-    - mariadb_galera
-    - hiera_apache
-    - foreman_main
-    - hiera_apache_rm
   parameters:
     strategy:
       type: one_by_one
@@ -78,16 +73,13 @@
 
 - id: puppet_master
   type: puppet
-  groups: [primary-lcm, lcm]
+  groups: *lcm_nodes
   required_for: [deploy_end]
   requires: [hiera]
   parameters:
     puppet_manifest: puppet/manifests/puppet_master.pp
     puppet_modules: puppet/modules:/etc/puppet/modules
     timeout: 600
-
-
-
 
 - id: puppet_agent_pre
   type: shell
@@ -111,7 +103,7 @@
 
 - id: hiera_apache
   type: puppet
-  role: [primary-lcm, lcm]
+  groups: *lcm_nodes
   required_for: [foreman_main]
   requires: [puppet_master,mariadb_galera]
   parameters:
@@ -121,7 +113,7 @@
 
 - id: foreman_main
   type: puppet
-  role: [primary-lcm, lcm]
+  groups: *lcm_nodes
   required_for: [hiera_apache_rm]
   requires: [hiera_apache]
   parameters:
@@ -132,7 +124,7 @@
 
 - id: hiera_apache_rm
   type: puppet
-  role: [primary-lcm, lcm]
+  groups: *lcm_nodes
   required_for: [deploy_end]
   requires: [foreman_main]
   parameters:
