@@ -360,7 +360,7 @@ attributes:
     label: "Foreman base url"
     type: "text"
     description: |
-      Smart proxy needs to know where Foreman API is
+      Smart proxy needs to know where Foreman API lives.
       https://smart-proxy-FQDN by default
     weight: 390
     regex:
