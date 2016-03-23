@@ -4,44 +4,8 @@ attributes:
       generator: "password"
     mariadb_check_password:
       generator: "password"
-
-# HAProxy
-  ha_puppet_options:
-    description: "The options for haproxy of service Puppet Master"
-    label: "Puppet HA options"
-    type: "text"
-    value: "tcpka"
-    weight: 50
-  ha_mariadb_options:
-    description: "The options for haproxy of service Mariadb"
-    label: "Mariadb HA options"
-    type: "text"
-    value: "'tcplog', 'clitcpka', 'srvtcpka'"
-    weight: 60
-  lcm_ha_foreman_443_options:
-    description: "The options for haproxy of service Foreman on 443"
-    label: "Foreman on 443 HA options"
-    type: "text"
-    value: "'httplog', 'httpclose'"
-    weight: 70
-  lcm_ha_foreman_8443_options:
-    description: "The options for haproxy of service Foreman on 8443"
-    label: "Foreman on 8443 HA options"
-    type: "text"
-    value: "'httplog', 'httpclose'"
-    weight: 72
-  lcm_ha_foreman_80_options:
-    description: "The options for haproxy of service Foreman on 80"
-    label: "Foreman on 80 HA options"
-    type: "text"
-    value: "'httplog', 'httpclose'"
-    weight: 74
-  lcm_ha_middleware_options:
-    description: "The options for haproxy of service Middleware"
-    label: "Middleware HA options"
-    type: "text"
-    value: "'httplog', 'httpclose'"
-    weight: 80
+    keepalived_psk:
+      generator: "password"
 
 # Keepalived
   keepalived_cidr:
@@ -53,16 +17,148 @@ attributes:
     regex:
       source: '^(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\/([1-9]|[1-2]\d|3[0-2])$'
       error: "Invalid CIDR"
+
+  keepalived_vrid:
+    value: '50'
+    label: 'Keepalived virtual router id'
+    description: 'Virtual router id for LCM keepalived instace'
+    weight: 35
+    type: "text"
+    regex:
+      source: '^([1-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-4])$'
+      error: "Invalid VRID. Value should be in range between 1 and 254"
   public_vip_enabled:
     description: "Enable public vip reservation for LCM webui"
-    label: "Enable public vip reservation for LCM webui"
+    label: "Enable public VIP"
     type: "checkbox"
     value: false
-    weight: 32
+    weight: 40
 
+# Puppet Master
+  puppetmaster:
+    label: "Puppet master FQDN"
+    description: "Puppet master FQDN. If not set - VIP will be used"
+    type: "text"
+    regex:
+      source: &fqdn_regex '^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$|^$'
+      error: "Invalid Puppet master FQDN"
+    value: ""
+    weight: 95
+  ca_server:
+    label: "CA server FQDN"
+    description: "Certification Authority server"
+    type: "text"
+    regex:
+      source: *fqdn_regex
+      error: "Invalid CA server FQDN"
+    value: ""
+    weight: 100
+  dns_alt_names:
+    label: "Alternate names for Puppet master"
+    description: "Comma separated alternate DNS names to allow to be valid for a certification. Example: host,host.smth.com"
+    type: "text"
+    regex:
+      source: '^(((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]))+)(,((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]))+)*$|^$'
+      error: "Invalid DNS names"
+    value: ""
+    weight: 110
+  server_foreman_url:
+    label: "Foreman URL"
+    description: "Custom URL for the Foreman installation. By default used Puppet master FQDN. Example: https://foreman.com"
+    type: "text"
+    regex:
+      source: &url_regex '^(?:[hH][tT][tT][pP](?:[sS])?:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$|^$'
+      error: "Invalid URL"
+    value: ""
+    weight: 120
 
-########################## Fuel Puppetmaster plugin params:   https://gist.github.com/sbrimhall/79997bd90c7e5eca9e2f   ###########################################
-#foreman:
+# R10k:
+  private_repo:
+    description: "Switch ON if R10k control repo is private."
+    label: "Configure private repo user"
+    type: "checkbox"
+    value: false
+    weight: 125
+  r10k_do_init:
+    description: "If r10k should create puppet env after deployment"
+    label: "Create puppet env"
+    type: "checkbox"
+    value: false
+    weight: 130
+  r10k_branch:
+    description: "Branch name to be used for puppet env creation"
+    label: "Branch name"
+    type: "text"
+    value: 'master'
+    weight: 135
+    restrictions:
+      - condition: "settings:fuel-plugin-lcm.r10k_do_init.value != true"
+        action: hide
+  r10k_key:
+    description: "Please supply private key for R10k to access a private repo by SSH."
+    label: "Private key for a private repo"
+    type: "file"
+    value: ''
+    weight: 140
+    restrictions:
+      - condition: "settings:fuel-plugin-lcm.private_repo.value != true"
+        action: hide
+  user:
+    description: "Please supply R10k username for private repo"
+    label: "R10k username"
+    type: "text"
+    value: "puppetr10k"
+    weight: 145
+    restrictions:
+      - condition: "settings:fuel-plugin-lcm.private_repo.value != true"
+        action: hide
+  mode:
+    description: "Please supply mode for R10k files"
+    label: "R10k privileges mode"
+    type: "text"
+    value: "0755"
+    weight: 150
+    restrictions:
+      - condition: "settings:fuel-plugin-lcm.private_repo.value != true"
+        action: hide
+  remote_repo:
+    description: "Please supply control repo link for R10k"
+    label: "R10k control repo link"
+    type: "text"
+    value: ''
+    weight: 155
+
+# R10k Webhook:
+  default_vhost:
+    label: "Enable default vhost for Apache frontend"
+    type: "checkbox"
+    value: true
+    weight: 160
+  port:
+    description: "Please supply port number for Middlware"
+    label: "Middleware Http port"
+    type: "text"
+    value: "9292"
+    weight: 165
+  webhook_auth_user:
+    description: "Please provide a priviledged user name"
+    label: "Priviledged user account"
+    type: "text"
+    value: "root"
+    weight: 170
+  webhook_private_key:
+    description: "Please supply a private key for R10k user SSH authorization"
+    label: "r10k private key"
+    type: "file"
+    value: ''
+    weight: 175
+  webhook_public_key:
+    description: "Please supply a public key for R10k user SSH authorization"
+    label: "r10k public key"
+    type: "file"
+    value: ''
+    weight: 180
+
   foreman_user:
     value: 'admin'
     label: 'Foreman username'

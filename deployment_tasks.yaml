@@ -73,7 +73,7 @@
 
 - id: puppet_master
   type: puppet
-  groups: *lcm_nodes
+  groups: [primary-lcm, lcm]
   required_for: [deploy_end]
   requires: [hiera]
   parameters:
@@ -100,6 +100,37 @@
     retries: 3
     interval: 20
     timeout: 180
+
+- id: r10k_deploy
+  type: puppet
+  groups: *lcm_nodes
+  required_for: [deploy_end]
+  requires: [hosts]
+  parameters:
+    puppet_manifest: puppet/manifests/r10k_deploy.pp
+    puppet_modules: puppet/modules:/etc/puppet/modules
+    timeout: 600
+
+- id: r10k_init
+  type: puppet
+  groups: *lcm_nodes
+  required_for: [deploy_end]
+  requires: [r10k_deploy]
+  parameters:
+    puppet_manifest: puppet/manifests/r10k_init.pp
+    puppet_modules: puppet/modules:/etc/puppet/modules
+    timeout: 600
+
+- id: r10k_webhook
+  type: puppet
+  groups: *lcm_nodes
+  required_for: [deploy_end]
+  requires: [puppet_master]
+  parameters:
+    puppet_manifest: puppet/manifests/r10k_webhook.pp
+    puppet_modules: puppet/modules:/etc/puppet/modules
+    timeout: 600
+
 
 - id: hiera_apache
   type: puppet
