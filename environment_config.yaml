@@ -159,12 +159,13 @@ attributes:
     value: ''
     weight: 180
 
+  ##### Source document from Scott:  https://gist.github.com/sbrimhall/79997bd90c7e5eca9e2f
   foreman_user:
     value: 'admin'
     label: 'Foreman username'
     type: "text"
     description:
-    weight: 510
+    weight: 210
     regex:
       source: &letdig_regex '^[A-Za-z0-9]*$'
       error: "Valid option is a sequence of letters and digits"
@@ -174,30 +175,30 @@ attributes:
     label: 'Foreman password'
     type: "text"
     description:
-    weight: 520
+    weight: 220
     regex:
       source: *letdig_regex
-      error: "Valid option is a sequence of letters"
+      error: "Valid option is a sequence of letters and digits"
 
-  deploy_user:
+  deploy_user:    # disabled until getting some clarification from Scott
     value: 'deploy_user'
     label: 'Operator username'
     type: "text"
     description:
-    weight: 530
+    weight: 230
     regex:
       source: *letdig_regex
-      error: "Valid option is a sequence of letters and underscore"
+      error: "Valid option is a sequence of letters and digits"
     restrictions:
       - condition: "true" 
         action: "disable"
 
-  deploy_password:
+  deploy_password: # disabled until getting some clarification from Scott
     value: 'deploy_password'
     label: 'Operator password'
     type: "text"
     description:
-    weight: 540
+    weight: 240
     regex:
       source: *letdig_regex
       error: "Valid option is a sequence of letters and digits"
@@ -210,10 +211,9 @@ attributes:
     label: 'Oauth consumer key'
     type: "text"
     description: |
-      Oauth key and secret values fom your Foreman instance
-      You can retrieve them later from
-      Foreman Administer > Settings > Auth
-    weight: 550
+      Oauth key and secret values for the Foreman instance
+      Leave it blank to get random ones.
+    weight: 250
     regex:
       source: *letdig_regex
       error: "Valid option is a sequence of letters and digits"
@@ -222,8 +222,10 @@ attributes:
     value: 'EiwMYSN78wKxQETrqB7rhCWBn9HcXV3x'
     label: 'Oauth consumer secret'
     type: "text"
-    description:
-    weight: 560
+    description: |
+      You can retrieve it later from
+      Foreman Administer > Settings > Auth
+    weight: 260
     regex:
       source: *letdig_regex
       error: "Valid option is a sequence of letters and digits"
@@ -233,7 +235,7 @@ attributes:
     label: "Use custom certificates on LCM nodes."
     type: "checkbox"
     value: false
-    weight: 565
+    weight: 265
 
   ssl_ca_location:
     value: "" 
@@ -242,7 +244,7 @@ attributes:
     description: |
       Provide path to custom SSL CA. 
       Ex: /var/lib/puppet/ssl/certs/ca.pem
-    weight: 570
+    weight: 270
     restrictions:
       - condition: "settings:fuel-plugin-lcm.own_ssl_certificate.value != true"
         action: "disable"
@@ -257,7 +259,7 @@ attributes:
     description: |
       Provide path to custom SSL CERT. 
       Ex: /var/lib/puppet/ssl/certs/fuel.domain.tld.pem
-    weight: 580
+    weight: 280
     restrictions:
       - condition: "settings:fuel-plugin-lcm.own_ssl_certificate.value != true"
         action: "disable"
@@ -272,7 +274,7 @@ attributes:
     description: | 
       Provide path to custom SSL CRL. 
       Ex.: /var/lib/puppet/ssl/crl.pem
-    weight: 590
+    weight: 290
     restrictions:
       - condition: "settings:fuel-plugin-lcm.own_ssl_certificate.value != true"
         action: "disable"
@@ -286,7 +288,7 @@ attributes:
     label: "DB username"
     type: "text"
     description: "Database 'production' user"
-    weight: 600
+    weight: 300
     regex:
       source: *letdig_regex
       error: "Valid option is a sequence of letters"
@@ -296,7 +298,7 @@ attributes:
     label: "DB password"
     type: "text"
     description: "Database 'production' password"
-    weight: 610
+    weight: 310
     regex:
       source: *letdig_regex
       error: "Valid option is a sequence of letters"
@@ -306,7 +308,7 @@ attributes:
     label: "Use custom puppet certificates on LCM nodes."
     type: "checkbox"
     value: false
-    weight: 650
+    weight: 350
 
   puppet_ssl_ca_location:
     value: ''
@@ -315,7 +317,7 @@ attributes:
     description: |
       Provide path to custom SSL CA. 
       Ex: /var/lib/puppet/ssl/certs/ca.pem
-    weight: 660
+    weight: 360
     restrictions:
       - condition: "settings:fuel-plugin-lcm.own_puppet_certificate.value != true"
         action: "disable"
@@ -330,7 +332,7 @@ attributes:
     description: |
       Provide path to custom SSL CERT. 
       Ex: /var/lib/puppet/ssl/certs/fuel.domain.tld.pem
-    weight: 670
+    weight: 370
     restrictions:
       - condition: "settings:fuel-plugin-lcm.own_puppet_certificate.value != true"
         action: "disable"
@@ -345,7 +347,7 @@ attributes:
     description: |
       Provide path to custom SSL KEY. 
       Ex: /var/lib/puppet/ssl/private_keys/fuel.domain.tld.pem
-    weight: 680
+    weight: 380
     restrictions:
       - condition: "settings:fuel-plugin-lcm.own_puppet_certificate.value != true"
         action: "disable"
@@ -354,49 +356,49 @@ attributes:
       error: "Non valid option. Wrong symbol."
 
   foreman_base_url:
-    value: 'localhost'
+    value: ""
     label: "Foreman base url"
     type: "text"
     description: |
-      Smart proxy needs to know
-      where Foreman API lives
-    weight: 690
+      Smart proxy needs to know where Foreman API is
+      https://smart-proxy-FQDN by default
+    weight: 390
     regex:
-      source:  '^[-A-Za-z0-9_:./]*$' 
-      error: "Non valid option. Wrong symbol."
+      source: *url_regex
+      error: "Invalid URL"
 
   oauth_effective_user:
-    value: 'admin'
+    value: "admin"
     label: "Oauth effective user"
     type: "text"
     description: "User to be used for REST interaction"
-    weight: 700
+    weight: 400
     regex:
-      source: '^[A-Za-z0-9]*$'
+      source: *letdig_regex
       error: "Valid option is a sequence of letters and digits"
-
+  
   tftp:  # (boolean to turn on tftp or not)
     description:  
     label: "Use foreman TFTP"
     type: "checkbox"
     value: false
-    weight: 720
+    weight: 420
   dhcp:  # (boolean for dhcp)
     description: 
     label: "Use foreman DHCP"
     type: "checkbox"
     value: false
-    weight: 730
+    weight: 430
   dns:   # (boolean for dns)
     description: 
     label: "Use foreman DNS"
     type: "checkbox"
     value: false
-    weight: 740
+    weight: 440
   bmc:   # (boolean for IPMI plugin)
     description: 
     label: "Use foreman IPMI plugin"
     type: "checkbox"
     value: false
-    weight: 750
+    weight: 450
 

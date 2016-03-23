@@ -128,11 +128,11 @@ class { '::foreman_proxy':
   bmc => $bmc,
   realm => false, # Do we really need it?
   register_in_foreman => true,
-  foreman_base_url => "https://$fqdn", #$foreman_base_url,
+  foreman_base_url => "https://$fqdn", #TODO: Check WebUI parameter of $foreman_base_url,
   oauth_consumer_key => $oauth_consumer_key,
   oauth_consumer_secret => $oauth_consumer_secret,
   registered_name => $fqdn,
-  registered_proxy_url => "https://${fqdn}:8443", # Change to lower_fqdn
+  registered_proxy_url => "https://${fqdn}:8443", # TODO: Change to lower_fqdn
   oauth_effective_user => $oauth_effective_user,
   dir => "/usr/share/foreman-proxy",
   user => foreman-proxy,
