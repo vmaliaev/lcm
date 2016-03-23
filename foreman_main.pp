@@ -22,6 +22,12 @@ $oauth_consumer_secret	  = $lcm_hiera_values['oauth_consumer_secret'] #TODO: add
 $foreman_base_url	  = $lcm_hiera_values['foreman_base_url'] #TODO: add $( hostname -f)
 $oauth_effective_user     = $lcm_hiera_values['oauth_effective_user']
 
+$tftp			  = $lcm_hiera_values['tftp'] 
+$dhcp			  = $lcm_hiera_values['dhcp']
+$dns  			  = $lcm_hiera_values['dns']
+$bmc    		  = $lcm_hiera_values['bmc']
+
+
 # TODO: Change the following resource parameters or move it to init.pp !!!!!!!
 mysql::db { $dbname:
  user     => $db_user,
@@ -116,11 +122,11 @@ class { '::foreman_proxy':
   http_port => 8000,
   ssl_port => 8443,
   puppetrun => true,
-  tftp => false,
-  dhcp => false,
-  dns => false,
-  bmc => false,
-  realm => false,
+  tftp => $tftp,
+  dhcp => $dhcp,
+  dns => $dns,
+  bmc => $bmc,
+  realm => false, # Do we really need it?
   register_in_foreman => true,
   foreman_base_url => "https://$fqdn", #$foreman_base_url,
   oauth_consumer_key => $oauth_consumer_key,
