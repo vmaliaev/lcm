@@ -14,14 +14,13 @@
 
 notice('PLUGIN: fuel-plugin-lcm/foreman_main.pp')
 
+#$roles                    = hiera('roles')
+#$network_metadata         = hiera('network_metadata')
+#$lcm_nodes_array          = get_nodes_hash_by_roles($network_metadata, ['primary-lcm', 'lcm'])
+
 include ::plugin_lcm
 $lcm_apache_ports         = $::plugin_lcm::lcm_apache_ports
-
-$roles                    = hiera('roles')
-$network_metadata         = hiera('network_metadata')
-$lcm_hiera_values         = hiera('fuel-plugin-lcm')
-
-$lcm_nodes_array          = get_nodes_hash_by_roles($network_metadata, ['primary-lcm', 'lcm'])
+$lcm_hiera_values         = $::plugin_lcm::lcm_hiera_values #hiera('fuel-plugin-lcm')
 
 $dbname                   = 'foreman'
 $db_user                  = $lcm_hiera_values['db_user'] #TODO: add pick from foreman params.pp $::foreman::db_username 
