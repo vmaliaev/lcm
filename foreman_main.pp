@@ -47,7 +47,7 @@ mysql::db { $dbname:
 #include apache::listen
 
 #$lcm_apache_ports = $::plugin_lcm::lcm_apache_ports
-apache::listen {$lcm_apache_ports: 
+apache::listen { $lcm_apache_ports: 
 }
 
 
@@ -65,8 +65,8 @@ class { '::foreman':
   authentication => true,
   oauth_active => true,
   oauth_map_users => true,
-  oauth_consumer_key => $oauth_consumer_key,
-  oauth_consumer_secret => $oauth_consumer_secret,
+  oauth_consumer_key => $oauth_consumer_key, #TODO: add randomly generated key
+  oauth_consumer_secret => $oauth_consumer_secret, #TODO: add randomly generated secret
   passenger	=> true,
   apipie_task => "apipie:cache:index",
   app_root	=> "/usr/share/foreman",
@@ -94,8 +94,8 @@ class { '::plugin_lcm::foreman_ext':
   authentication => true,
   oauth_active => true,
   oauth_map_users => true,
-  oauth_consumer_key => $oauth_consumer_key,
-  oauth_consumer_secret => $oauth_consumer_secret,
+  oauth_consumer_key => $oauth_consumer_key, #TODO: add randomly generated key
+  oauth_consumer_secret => $oauth_consumer_secret, #TODO: add randomly generated secret
   passenger	=> true,
   apipie_task => "apipie:cache:index",
   app_root	=> "/usr/share/foreman",
