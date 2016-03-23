@@ -1,14 +1,12 @@
 #
 notice('PLUGIN: fuel-plugin-lcm/foreman_main.pp')
 
+include ::plugin_lcm
+$lcm_apache_ports = $::plugin_lcm::lcm_apache_ports
+
 $roles                   = hiera('roles')
 $network_metadata        = hiera('network_metadata')
 $lcm_hiera_values        = hiera('fuel-plugin-lcm')
-#$fqdn			 = hiera('fqdn') # Change to $::fqdn
-#$lower_fqdn 		 = downcase($::fqdn)
-
-
-
 
 $lcm_nodes_array         = get_nodes_hash_by_roles($network_metadata, ['primary-lcm', 'lcm'])
 
@@ -16,18 +14,14 @@ $dbname			 = 'foreman'
 $db_user		 = $lcm_hiera_values['db_user']
 $db_pass		 = $lcm_hiera_values['db_pass'] #TODO: add password generator
 
-
-#$mariadb_root_password   = $lcm_hiera_values['metadata']['mariadb_root_password']
-
 $foreman_user		  = $lcm_hiera_values['foreman_user']
 $foreman_password         = $lcm_hiera_values['foreman_password']
 $oauth_consumer_key	  = $lcm_hiera_values['oauth_consumer_key'] #TODO: add random function
 $oauth_consumer_secret	  = $lcm_hiera_values['oauth_consumer_secret'] #TODO: add random secret
 
 $foreman_base_url	  = $lcm_hiera_values['foreman_base_url'] #TODO: add $( hostname -f)
+$oauth_effective_user     = $lcm_hiera_values['oauth_effective_user']
 
-include ::plugin_lcm
-$lcm_apache_ports = $::plugin_lcm::lcm_apache_ports
 # TODO: Change the following resource parameters or move it to init.pp !!!!!!!
 mysql::db { $dbname:
  user     => $db_user,
@@ -133,7 +127,7 @@ class { '::foreman_proxy':
   oauth_consumer_secret => $oauth_consumer_secret,
   registered_name => $fqdn,
   registered_proxy_url => "https://${fqdn}:8443", # Change to lower_fqdn
-  oauth_effective_user => $foreman_user,
+  oauth_effective_user => $oauth_effective_user,
   dir => "/usr/share/foreman-proxy",
   user => foreman-proxy,
  
