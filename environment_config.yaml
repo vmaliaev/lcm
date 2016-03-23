@@ -205,7 +205,6 @@ attributes:
       source: *letdig_regex
       error: "Valid option is a sequence of letters"
 
-#foreman_proxy:
   own_puppet_certificate: # Checkbox
     description:
     label: "Use custom puppet certificates on LCM nodes."
@@ -279,8 +278,6 @@ attributes:
     regex:
       source: '^[A-Za-z0-9]*$'
       error: "Valid option is a sequence of letters and digits"
-#    - oauth consumer key  #Hide?
-#    - oauth consumer secret  #Hide?
 
   tftp:  # (boolean to turn on tftp or not)
     description:  
