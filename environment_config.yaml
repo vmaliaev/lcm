@@ -1,26 +1,6 @@
 attributes:
-  prerequisites:
-    weight: 2
-    type: "hidden"
-#    value: true
-#    label: "Important notes:"
-    description: |
-      To use Mellanox High Performance features, you have to complete the following prerequisites prior to the deployment:
-        - For Ethernet deployment:
-        *   Configure the Switch ports to Ethernet mode.
-        *   Configure the desired VLANs for each port.
-        - For InfiniBand deployment:
-        *   Configure the Switch ports to InfiniBand mode.
-        *   Configure a Subnet Manager (SM) on the switch or on a node in the cluster, as described in the User manual.
-        *   Reboot bootstrap nodes using the "reboot_bootstrap_nodes" script, from the Fuel master, in order to load eIPoIB hardware discovery support.
-        - After the interfaces discovery, perform the following:
-        *   Set the relevant networks to work over Mellanox interfaces, in the interfaces configuration in the Nodes tab.
-        *   Run network verification, after configuring the desired network subnets and VLAN segmentations.
-        - For more information: https://community.mellanox.com/docs/DOC-2165
   metadata:
-    mariadb_root_password:
-      generator: "password"
-    mariadb_check_password:
+    perconadb_check_password:
       generator: "password"
     keepalived_psk:
       generator: "password"
@@ -48,17 +28,6 @@ attributes:
     restrictions: *hide
 
 # Keepalived
-  keepalived_net:
-    value: '10.0.0.0'
-    label: 'Keepalived network'
-    description: 'Network address for keepalived daemons. It would be bridged into management network and must not interfere with it. Keepalived network will obtain same mask as management net'
-    weight: 30
-    type: "text"
-    regex:
-      source: '^(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$'
-      error: "Invalid network address"
-    restrictions: *hide
-
   public_vip_enabled:
     description: "Enable public vip reservation for LCM webui"
     label: "Enable public VIP"
@@ -87,14 +56,28 @@ attributes:
     weight: 125
     restrictions: *hide
   r10k_key:
-    description: "Please supply private key for R10k to access a private repo by SSH."
-    label: "Private key for a private repo"
+    description: "Please supply private key for R10k to access a private repo over SSH."
+    label: "Private repo key"
     type: "file"
     value: ''
     weight: 130
     restrictions: &private_repo_hide
       - condition: "settings:fuel-plugin-lcm.private_repo.value != true or settings:fuel-plugin-lcm.metadata.enabled != true"
         action: hide
+  user:
+    description: "Please supply R10k username to access a private repo over SSH."
+    label: "R10k repo SSH user"
+    type: "text"
+    value: "puppetr10k"
+    weight: 131
+    restrictions: *private_repo_hide
+  mode:
+    description: "Please supply mode for R10k files"
+    label: "R10k privileges mode"
+    type: "text"
+    value: "0755"
+    weight: 132
+    restrictions: *private_repo_hide
   r10k_do_init:
     description: "If r10k should create puppet env after deployment"
     label: "Create puppet env"
@@ -102,29 +85,6 @@ attributes:
     value: false
     weight: 135
     restrictions: *hide
-  r10k_branch:
-    description: "Branch name to be used for puppet env creation"
-    label: "Branch name"
-    type: "text"
-    value: 'master'
-    weight: 140
-    restrictions: &r10k_do_init
-      - condition: "settings:fuel-plugin-lcm.r10k_do_init.value != true or settings:fuel-plugin-lcm.metadata.enabled != true"
-        action: hide
-  user:
-    description: "Please supply R10k username for private repo"
-    label: "R10k repo user"
-    type: "text"
-    value: "puppetr10k"
-    weight: 145
-    restrictions: *private_repo_hide
-  mode:
-    description: "Please supply mode for R10k files"
-    label: "R10k privileges mode"
-    type: "text"
-    value: "0755"
-    weight: 150
-    restrictions: *private_repo_hide
   remote_repo:
     description: "Please supply control repo link for R10k"
     label: "R10k control repo link"
@@ -175,6 +135,19 @@ attributes:
       source: *letdig_regex
       error: "Valid option is a sequence of letters and digits"
     restrictions: *hide
+  perconadb_root_password:
+    value:
+      generator: 'password'
+    label: 'PerconaDB root password'
+    type: "password"
+    description:
+    weight: 230
+    regex:
+      source: *letdig_regex
+      error: "Valid option is a sequence of letters and digits"
+    restrictions:
+      - condition: "settings:fuel-plugin-lcm.metadata.enabled"
+        action: hide
   oauth_consumer_key:
     value:
       generator: 'password'
@@ -210,31 +183,6 @@ attributes:
     value: false
     weight: 265
     restrictions: *hide
-#  ssl_ca_location:
-#    value: ""
-#    label: "SSL CA location"
-#    type: "text"
-#    description: |
-#      Provide path to custom SSL CA.
-#      Ex: /var/lib/puppet/ssl/certs/ca.pem
-#    weight: 270
-#    restrictions: &own_ssl_certificate_hide
-#      - condition: "settings:fuel-plugin-lcm.own_ssl_certificate.value != true or settings:fuel-plugin-lcm.metadata.enabled != true"
-#        action: "hide"
-#    regex:
-#      source: &file_path '^(/[-A-Za-z0-9_./]*|^)$'
-#      error: "Non valid option. Wrong symbol."
-
-#  r10k_key:
-#    description: "Please supply private key for R10k to access a private repo by SSH."
-#    label: "Private key for a private repo"
-#    type: "file"
-#    value: ''
-#    weight: 130
-#    restrictions: &private_repo_hide
-#      - condition: "settings:fuel-plugin-lcm.private_repo.value != true or settings:fuel-plugin-lcm.metadata.enabled != true"
-#        action: hide
-#
   ssl_foreman_cert_private_key:
     value: ""
     label: 'SSL CERT private key'
@@ -242,14 +190,10 @@ attributes:
     description: |
       Load a custom SSL CERT private key here  and
       an appropriate certificate in the next field
-#      Ex: /var/lib/puppet/ssl/certs/fuel.domain.tld.pem
     weight: 275
     restrictions: &own_ssl_certificate_hide
       - condition: "settings:fuel-plugin-lcm.own_ssl_certificate.value != true or settings:fuel-plugin-lcm.metadata.enabled != true"
         action: "hide"
-#    regex:
-#      source: &file_path '^(/[-A-Za-z0-9_./]*|^)$'
-#      error: "Non valid option. Wrong symbol."
   ssl_foreman_cert:
     value: ""
     label: "SSL CERTIFICATE"
@@ -257,33 +201,23 @@ attributes:
     description: |
       Load signed Foreman SSL certificate, also
       please load the private key in the prev field
-#      Ex: /var/lib/puppet/ssl/certs/fuel.domain.tld.pem
     weight: 280
     restrictions: *own_ssl_certificate_hide
-#    regex:
-#      source: *file_path
-#      error: "Non valid option. Wrong symbol."
   ssl_crl_location:
     value: ""
     label: "SSL CRL file"
     type: "file"
     description: |
       Load custom SSL CRL
-#      Ex.: /var/lib/puppet/ssl/crl.pem
     weight: 290
     restrictions: *own_ssl_certificate_hide
-#    regex:
-#      source: *file_path
-#      error: "Non valid option. Wrong symbol."
-
-
   own_puppet_certificate:
     description:
-    label: "Use custom puppet certificates on LCM nodes"
+    label: "Use custom puppet certificates on LCM nodes."
     type: "checkbox"
     value: false
     weight: 350
-    restrictions: 
+    restrictions:
       - condition: "true != false" # Until the necessity of the Puppet CA will be discussed with Scott
         action: hide
   puppet_ssl_ca_location:
