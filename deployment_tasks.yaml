@@ -1,9 +1,10 @@
 # Deployment groups
 - id: primary-lcm
   type: group
+  version: &task_engine_version 2.0.0
   role: [primary-lcm]
-  required_for: [deploy_end]
   requires: [deploy_start]
+  required_for: [deploy_end]
   tasks: &common_tasks
     - hiera
     - setup_repositories
@@ -20,32 +21,87 @@
 
 - id: lcm
   type: group
+  version: *task_engine_version
   role: [lcm]
+  requires: [deploy_start]
   required_for: [deploy_end]
-  requires: [deploy_start, primary-lcm]
   tasks: *common_tasks
   parameters:
     strategy:
       type: parallel
 
 # Deployment tasks
-- id: mariadb_galera
-  type: puppet
-  groups: &lcm_nodes
+- id: generate_webhook_keys
+  type: shell
+  version: *task_engine_version
+  role: master
+  requires: [pre_deployment_start]
+  required_for: [pre_deployment_end]
+  parameters:
+    cmd: |
+      if [ ! -d ./misc/webhook_keys/{CLUSTER_ID} ]
+        then mkdir -p ./misc/webhook_keys/{CLUSTER_ID}
+      fi
+      if [ ! -f ./misc/webhook_keys/{CLUSTER_ID}/id_rsa ]
+        then /bin/ssh-keygen -q -f ./misc/webhook_keys/{CLUSTER_ID}/id_rsa -t rsa -N '' -C "webhook@$(dnsdomainname)"
+      fi
+    cwd: /var/www/nailgun/plugins
+    retries: 3
+    interval: 10
+    timeout: 120
+
+- id: pull_webhook_keys
+  type: copy_files
+  version: *task_engine_version
+  role: &lcm_nodes
     - lcm
     - primary-lcm
+  requires: [pre_deployment_start]
+  required_for: [pre_deployment_end]
+  cross-depends:
+    - name: generate_webhook_keys
+      role: master
+  parameters:
+    files:
+      - src: /var/www/nailgun/plugins/misc/webhook_keys/{CLUSTER_ID}/id_rsa
+        dst: /root/.ssh/id_rsa
+      - src: /var/www/nailgun/plugins/misc/webhook_keys/{CLUSTER_ID}/id_rsa.pub
+        dst: /root/.ssh/id_rsa.pub
+    permissions: '0600'
+    dir_permissions: '0700'
+
+- id: primary_perconadb_galera
+  type: puppet
+  version: *task_engine_version
+  groups: [primary-lcm]
+  requires: [keepalived]
   required_for: [deploy_end]
-  requires: [netconfig]
+  reexecute_on: [deploy_changes]
   parameters:
     puppet_manifest: puppet/manifests/database.pp
     puppet_modules: puppet/modules:/etc/puppet/modules
-    timeout: 3600
+    timeout: 1200
+
+- id: perconadb_galera
+  type: puppet
+  version: *task_engine_version
+  groups: [lcm]
+  requires: *common_tasks
+  required_for: [deploy_end]
+  reexecute_on: [deploy_changes]
+  cross-depends:
+    - name: primary_perconadb_galera
+  parameters:
+    puppet_manifest: puppet/manifests/database.pp
+    puppet_modules: puppet/modules:/etc/puppet/modules
+    timeout: 1200
 
 - id: nsm
   type: puppet
+  version: *task_engine_version
   groups: *lcm_nodes
+  requires: *common_tasks
   required_for: [deploy_end]
-  requires: [netconfig]
   parameters:
     puppet_manifest: puppet/manifests/nsm.pp
     puppet_modules: puppet/modules:/etc/puppet/modules
@@ -53,9 +109,10 @@
 
 - id: keepalived
   type: puppet
+  version: *task_engine_version
   groups: *lcm_nodes
+  requires: [nsm]
   required_for: [deploy_end]
-  requires: [netconfig]
   parameters:
     puppet_manifest: puppet/manifests/keepalived.pp
     puppet_modules: puppet/modules:/etc/puppet/modules
@@ -63,49 +120,96 @@
 
 - id: haproxy
   type: puppet
+  version: *task_engine_version
   groups: *lcm_nodes
+  requires:
+    - nsm
+    - primary_perconadb_galera
+    - perconadb_galera
+    - puppet
   required_for: [deploy_end]
-  requires: [netconfig]
   parameters:
     puppet_manifest: puppet/manifests/haproxy.pp
     puppet_modules: puppet/modules:/etc/puppet/modules
     timeout: 3600
 
-- id: puppet_master
+- id: ca_nfs_primary
   type: puppet
-  groups: [primary-lcm, lcm]
+  version: *task_engine_version
+  groups: [primary-lcm]
+  requires: *common_tasks
   required_for: [deploy_end]
-  requires: [hiera]
+  reexecute_on: [deploy_changes]
   parameters:
-    puppet_manifest: puppet/manifests/puppet_master.pp
+    puppet_manifest: puppet/manifests/ca_nfs.pp
     puppet_modules: puppet/modules:/etc/puppet/modules
     timeout: 600
 
-- id: puppet_agent_pre
-  type: shell
-  role: '*'
-  required_for: [pre_deployment_start]
+- id: ca_nfs_client
+  type: puppet
+  version: *task_engine_version
+  groups: [lcm]
+  requires: *common_tasks
+  required_for: [deploy_end]
+  reexecute_on: [deploy_changes]
+  cross-depends:
+    - name: ca_nfs_primary
+      role: primary-lcm
   parameters:
-    cmd: if [ -f /etc/init.d/puppet ]; then service puppet stop; fi
-    retries: 3
-    interval: 20
-    timeout: 180
+    puppet_manifest: puppet/manifests/ca_nfs.pp
+    puppet_modules: puppet/modules:/etc/puppet/modules
+    timeout: 600
 
-- id: puppet_agent_post
-  type: shell
-  role: '*'
-  requires: [post_deployment_end]
+- id: primary_puppet
+  type: puppet
+  version: *task_engine_version
+  groups: [primary_lcm]
+  requires: *common_tasks
+  required_for: [deploy_end]
+  reexecute_on: [deploy_changes]
   parameters:
-    cmd: service puppet start
-    retries: 3
-    interval: 20
-    timeout: 180
+    puppet_manifest: puppet/manifests/puppet.pp
+    puppet_modules: puppet/modules:/etc/puppet/modules
+    timeout: 600
+
+- id: puppet
+  type: puppet
+  version: *task_engine_version
+  groups: ['/.*/']
+  requires: *common_tasks
+  required_for: [deploy_end]
+  reexecute_on: [deploy_changes]
+  cross-depends:
+    - name: ca_nfs_client
+      role: lcm
+    - name: primary_puppet
+      role: primary-lcm
+  parameters:
+    puppet_manifest: puppet/manifests/puppet.pp
+    puppet_modules: puppet/modules:/etc/puppet/modules
+    timeout: 600
+
+- id: puppet_master_cert
+  type: puppet
+  version: *task_engine_version
+  groups: [lcm]
+  requires: *common_tasks
+  required_for: [deploy_end]
+  reexecute_on: [deploy_changes]
+  cross-depends:
+    - name: puppet
+      role: lcm
+  parameters:
+    puppet_manifest: puppet/manifests/master_cert.pp
+    puppet_modules: puppet/modules:/etc/puppet/modules
+    timeout: 600
 
 - id: r10k_deploy
   type: puppet
+  version: *task_engine_version
   groups: *lcm_nodes
-  required_for: [deploy_end]
-  requires: [hosts]
+  requires: [puppet]
+  required_for: [r10k_init]
   parameters:
     puppet_manifest: puppet/manifests/r10k_deploy.pp
     puppet_modules: puppet/modules:/etc/puppet/modules
@@ -113,9 +217,10 @@
 
 - id: r10k_init
   type: puppet
+  version: *task_engine_version
   groups: *lcm_nodes
-  required_for: [deploy_end]
   requires: [r10k_deploy]
+  required_for: [r10k_webhook]
   parameters:
     puppet_manifest: puppet/manifests/r10k_init.pp
     puppet_modules: puppet/modules:/etc/puppet/modules
@@ -123,43 +228,120 @@
 
 - id: r10k_webhook
   type: puppet
+  version: *task_engine_version
   groups: *lcm_nodes
+  requires: [r10k_init]
   required_for: [deploy_end]
-  requires: [puppet_master]
   parameters:
     puppet_manifest: puppet/manifests/r10k_webhook.pp
     puppet_modules: puppet/modules:/etc/puppet/modules
     timeout: 600
 
-
-- id: hiera_apache
+- id: primary_foreman
   type: puppet
-  groups: *lcm_nodes
-  required_for: [foreman_main]
-  requires: [puppet_master,mariadb_galera]
-  parameters:
-    puppet_manifest: puppet/manifests/hiera_apache.pp
-    puppet_modules: puppet/modules:/etc/puppet/modules
-    timeout: 3600
-
-- id: foreman_main
-  type: puppet
-  groups: *lcm_nodes
-  required_for: [hiera_apache_rm]
-  requires: [hiera_apache]
-  parameters:
-    puppet_manifest: puppet/manifests/foreman_main.pp
-    puppet_modules: puppet/modules:/etc/puppet/modules
-    timeout: 3600
-
-
-- id: hiera_apache_rm
-  type: puppet
-  groups: *lcm_nodes
+  version: *task_engine_version
+  groups: [primary-lcm]
+  requires:
+    - puppet
+    - primary_perconadb_galera
   required_for: [deploy_end]
-  requires: [foreman_main]
   parameters:
-    puppet_manifest: puppet/manifests/hiera_apache_rm.pp
+    puppet_manifest: puppet/manifests/foreman.pp
     puppet_modules: puppet/modules:/etc/puppet/modules
     timeout: 3600
 
+- id: foreman
+  type: puppet
+  version: *task_engine_version
+  groups: [lcm]
+  requires:
+    - puppet
+    - perconadb_galera
+  required_for: [deploy_end]
+  cross-depends:
+    - name: primary_foreman
+      role: primary-lcm
+  parameters:
+    puppet_manifest: puppet/manifests/foreman.pp
+    puppet_modules: puppet/modules:/etc/puppet/modules
+    timeout: 3600
+
+- id: upload_facts_lcm
+  type: shell
+  version: *task_engine_version
+  role: ['/.*/']
+  requires: [post_deployment_start]
+  required_for: [hiera_lcm]
+  reexecute_on: [deploy_changes]
+  parameters:
+    cmd: ruby puppet/modules/plugin_lcm/files/configdb_facts.rb
+    retries: 3
+    interval: 20
+    timeout: 180
+
+- id: hiera_lcm
+  type: puppet
+  version: *task_engine_version
+  role: *lcm_nodes
+  requires: [upload_facts_lcm]
+  required_for: [post_deployment_end]
+  reexecute_on: [deploy_changes]
+  parameters:
+    puppet_manifest: puppet/manifests/hiera.pp
+    puppet_modules: puppet/modules:/etc/puppet/modules
+    timeout: 600
+
+- id: upload_download_facts_lcm
+  type: shell
+  version: *task_engine_version
+  role: ['/.*/']
+  requires: [upload_configuration]
+  required_for: [pre_deployment_end]
+  reexecute_on: [deploy_changes]
+  parameters:
+    cmd: ruby puppet/modules/plugin_lcm/files/configdb_facts.rb
+    retries: 3
+    interval: 20
+    timeout: 180
+
+- id: update_hosts
+  type: puppet
+  version: *task_engine_version
+  groups: ['/.*/']
+  requires: [deploy_start]
+  required_for: [deploy_end]
+  cross-depends:
+    - name: foreman
+      role: lcm
+    - name: haproxy
+      role: *lcm_nodes
+  parameters:
+    puppet_manifest: puppet/manifests/update_hosts.pp
+    puppet_modules: puppet/modules:/etc/puppet/modules
+    timeout: 600
+
+- id: register_dashboard_link
+  type: shell
+  version: *task_engine_version
+  role: master
+  requires: [deploy_start]
+  required_for: [deploy_end]
+  parameters:
+    cmd: ./deployment_scripts/puppet/modules/plugin_lcm/files/link_registrator.py {CLUSTER_ID} 1.0.0
+    retries: 1
+    interval: 10
+    timeout: 120
+
+- id: netconfig
+  type: puppet
+  version: *task_engine_version
+  groups: ['/.*/']
+  requires:
+    - deploy_start
+    - tools
+  required_for: [deploy_end]
+  reexecute_on: [deploy_changes]
+  parameters:
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/netconfig/netconfig.pp
+    puppet_modules: /etc/puppet/modules
+    timeout: 3600
