@@ -243,7 +243,7 @@
   groups: [primary-lcm]
   requires:
     - puppet
-    - primary_perconadb_galera
+    - haproxy
   required_for: [deploy_end]
   parameters:
     puppet_manifest: puppet/manifests/foreman.pp
