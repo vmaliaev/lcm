@@ -164,7 +164,7 @@
   type: puppet
   version: *task_engine_version
   groups: [primary-lcm]
-  requires: *common_tasks
+  requires: [keepalived]
   required_for: [deploy_end]
   reexecute_on: [deploy_changes]
   parameters:
@@ -175,7 +175,7 @@
 - id: puppet
   type: puppet
   version: *task_engine_version
-  groups: ['/.*/']
+  groups: ['/((?!primary-lcm).)*/']  # ['/.*/']
   requires: *common_tasks
   required_for: [deploy_end]
   reexecute_on: [deploy_changes]
