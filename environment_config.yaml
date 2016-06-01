@@ -1,12 +1,9 @@
 attributes:
   metadata:
-    perconadb_check_password:
-      generator: "password"
-    keepalived_psk:
-      generator: "password"
-    foreman_db_password:
-      generator: "password"
     configdb_tenant: "services"
+    dashboard_links:
+    - title: LCM WebUI
+      description: Foreman WebUI link for LCM plugin
 
 #Keystone password for configdb user
   configdb_pass:
@@ -35,17 +32,40 @@ attributes:
     value: false
     weight: 40
 
-# Puppet Master
-  server_foreman_url:
-    label: "Foreman URL"
-    description: "Custom URL for the Foreman installation. By default used Puppet master FQDN. Example: https://foreman.com"
-    type: "text"
-    regex:
-      source: &url_regex '^(?:[hH][tT][tT][pP](?:[sS])?:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$|^$'
-      error: "Invalid URL"
-    value: ""
-    weight: 120
+# External NFS for Puppet CA
+  use_external_nfs:
+    description:
+    label: "Use external shared storage (NFS) for Puppet Certificate Authority?"
+    type: "checkbox"
+    value: false
+    weight: 460
     restrictions: *hide
+  lcm_ca_export_host:
+    value: ""
+    label: "External NFS server"
+    type: "text"
+    description: |
+      The hostname or IP address of the remote NFS server
+      Ex: awesome.example.com or 10.200.5.56
+    weight: 461
+    restrictions: &use_external_nfs_hide
+      - condition: "settings:fuel-plugin-lcm.use_external_nfs.value != true or settings:fuel-plugin-lcm.metadata.enabled != true"
+        action: "hide"
+    regex:
+      source: '^(/[-A-Za-z0-9_./]*|^)$'
+      error: "Must be a hostname or IP address"
+  lcm_ca_export:
+    value: ""
+    label: "Remote mount path"
+    type: "text"
+    description: |
+      Path exported by remote NFS server
+      Ex: /var/lib/puppet/ssl
+    weight: 462
+    restrictions: *use_external_nfs_hide
+    regex:
+      source: '^(/[-A-Za-z0-9_./]*|^)$'
+      error: "Must be a file path"
 
 # R10k:
   private_repo:
@@ -148,6 +168,45 @@ attributes:
     restrictions:
       - condition: "settings:fuel-plugin-lcm.metadata.enabled"
         action: hide
+  perconadb_check_password:
+    value:
+      generator: 'password'
+    label: 'PerconaDB check password'
+    type: "password"
+    description:
+    weight: 231
+    regex:
+      source: *letdig_regex
+      error: "Valid option is a sequence of letters and digits"
+    restrictions:
+      - condition: "settings:fuel-plugin-lcm.metadata.enabled"
+        action: hide
+  keepalived_psk:
+    value:
+      generator: 'password'
+    label: 'Keepalived psk password'
+    type: "password"
+    description:
+    weight: 232
+    regex:
+      source: *letdig_regex
+      error: "Valid option is a sequence of letters and digits"
+    restrictions:
+      - condition: "settings:fuel-plugin-lcm.metadata.enabled"
+        action: hide
+  foreman_db_password:
+    value:
+      generator: 'password'
+    label: 'Foreman database password'
+    type: "password"
+    description:
+    weight: 233
+    regex:
+      source: *letdig_regex
+      error: "Valid option is a sequence of letters and digits"
+    restrictions:
+      - condition: "settings:fuel-plugin-lcm.metadata.enabled"
+        action: hide
   oauth_consumer_key:
     value:
       generator: 'password'
@@ -184,7 +243,7 @@ attributes:
     weight: 265
     restrictions: *hide
   ssl_foreman_cert_private_key:
-    value: ""
+    value: ''
     label: 'SSL CERT private key'
     type: "file"
     description: |
@@ -192,10 +251,14 @@ attributes:
       an appropriate certificate in the next field
     weight: 275
     restrictions: &own_ssl_certificate_hide
+      - condition: 'settings:fuel-plugin-lcm.ssl_foreman_cert_private_key.value.name == null or settings:fuel-plugin-lcm.ssl_foreman_cert.value.name == null'
+        message: "Please, load both files, private key and certificate"
+        action: 'none'
+        strict: false
       - condition: "settings:fuel-plugin-lcm.own_ssl_certificate.value != true or settings:fuel-plugin-lcm.metadata.enabled != true"
         action: "hide"
   ssl_foreman_cert:
-    value: ""
+    value: ''
     label: "SSL CERTIFICATE"
     type: "file"
     description: |
@@ -210,7 +273,26 @@ attributes:
     description: |
       Load custom SSL CRL
     weight: 290
-    restrictions: *own_ssl_certificate_hide
+    restrictions:
+      - condition: "settings:fuel-plugin-lcm.own_ssl_certificate.value != true or settings:fuel-plugin-lcm.metadata.enabled != true"
+        action: "hide"
+  own_ssl_certificate_control_field:
+    value: ''
+    label: ''
+    type: 'hidden'
+    weight: 1000
+    restrictions:
+      - condition: "(settings:fuel-plugin-lcm.own_ssl_certificate.value != true \
+            and settings:fuel-plugin-lcm.ssl_foreman_cert_private_key.value.name == null \
+            and settings:fuel-plugin-lcm.ssl_foreman_cert.value.name == null) \
+          or (settings:fuel-plugin-lcm.own_ssl_certificate.value == true \
+            and settings:fuel-plugin-lcm.ssl_foreman_cert_private_key.value.name != null \
+            and settings:fuel-plugin-lcm.ssl_foreman_cert.value.name != null)"
+        action: "none"
+        strict: false
+    regex:
+      source: '\S'
+      error: "Incorrect combination. Check field content."
   own_puppet_certificate:
     description:
     label: "Use custom puppet certificates on LCM nodes."
@@ -267,7 +349,7 @@ attributes:
       https://smart-proxy-FQDN by default
     weight: 390
     regex:
-      source: *url_regex
+      source: &url_regex '^(?:[hH][tT][tT][pP](?:[sS])?:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$|^$'
       error: "Invalid URL"
     restrictions: *hide
   oauth_effective_user:
