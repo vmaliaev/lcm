@@ -175,7 +175,7 @@
 - id: puppet
   type: puppet
   version: *task_engine_version
-  groups: ['/((?!primary-lcm).)*/']  # ['/.*/']
+  groups: ['/(?!\bprimary-lcm\b)[-a-zA-Z]+/']  # ['/.*/']
   requires: *common_tasks
   required_for: [deploy_end]
   reexecute_on: [deploy_changes]
