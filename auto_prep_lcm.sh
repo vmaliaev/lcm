@@ -57,17 +57,17 @@ fuel settings --env-id $e upload --dir ~/
 
 echo -e "\nfuel node --env-id=${e} --node-id=2,2,2 --provision"
 
-echo -e "\nFINISH, I will be waiting 3 minutes for discovered nodes and will echo a message to provision."
+echo -e "\nFINISH, I will be waiting 7 minutes for discovered nodes and will echo a message to provision."
 
-sleep 180
+sleep 420
 
 ips=""
 if [ `fuel node | grep discover | awk '{print $1}' | wc -l` -gt 2 ] ; then
   for i in `fuel node | awk /discover/'{print $1}'` ; do ips="${ips}$i,"; done ;
 fi
 
-echo ${ips} | rev | cut -c 2- | rev
+ips=`echo ${ips} | rev | cut -c 2- | rev`
 
 fuel node
-echo -e "\nfuel node --env-id=${e} --node-id=${ips} --provision"
+echo -e "\nfuel node --env-id=${e} --node-id=${ips} --provision; sleep 300; fuel node --env-id=${e} --node-id=${ips} --deploy"
 
