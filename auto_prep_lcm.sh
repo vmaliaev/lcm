@@ -6,30 +6,32 @@ if [ `ls * | grep -c fuel-plugin-lcm-1.0-1.0.0-1.noarch.rpm` -eq 0 ] ; then echo
 
 
 
-echo "Preparing new ENV"
+echo -e "\nPreparing new ENV"
 echo "-----------------"
 
-echo "Deleting all environments:"
+echo -e "\nDeleting all environments:"
 fuel nodes list
 for i in `fuel env | grep  -v -e '\-\-\-' -e 'id' | awk '{print $1}'` ; do fuel env --env-id ${i} delete ; done
 
-echo "Deleting plugin:"
+sleep 10
+
+echo -e "\nDeleting plugin:"
 fuel plugins --remove fuel-plugin-lcm==1.0.0
 
-echo "Installing plugin:"
+echo -e "\nInstalling plugin:"
 fuel plugins --install fuel-plugin-lcm-1.0-1.0.0-1.noarch.rpm
 
-echo "Creating env --name AUTOENV:"
+echo -e "\nCreating env --name AUTOENV:"
 fuel env create --name AUTOENV --rel 2 --net-segment-type vlan
 
-echo "Copying targetimages:"
+echo -e "\nCopying targetimages:"
 cp /var/www/nailgun/targetimages/copy/* /var/www/nailgun/targetimages/
 fuel env | grep AUTOENV | awk '{print $1}'
 cd /var/www/nailgun/targetimages
 export e=`fuel env | grep AUTOENV | awk '{print $1}'`; for i in `ls | grep env` ; do a=`echo $i | sed -E "s/env_.+_(ubuntu.*)/env_${e}_\1/"` ; echo $a ; mv $i $a ; done
 cd -
 
-echo "Upload ATT repos:"
+echo -e "\nUpload ATT repos:"
 fuel settings --env-id $e download --dir ~/
 sed "/service_user/i \\
       - name: mos-aic\\
@@ -53,4 +55,19 @@ sed "/service_user/i \\
 
 fuel settings --env-id $e upload --dir ~/
 
+echo -e "\nfuel node --env-id=${e} --node-id=2,2,2 --provision"
+
+echo -e "\nFINISH, I will be waiting 3 minutes for discovered nodes and will echo a message to provision."
+
+sleep 180
+
+ips=""
+if [ `fuel node | grep discover | awk '{print $1}' | wc -l` -gt 2 ] ; then
+  for i in `fuel node | awk /discover/'{print $1}'` ; do ips="${ips}$i,"; done ;
+fi
+
+echo ${ips} | rev | cut -c 2- | rev
+
+fuel node
+echo -e "\nfuel node --env-id=${e} --node-id=${ips} --provision"
 
