@@ -11,7 +11,7 @@ echo "-----------------"
 
 echo -e "\nDeleting all environments:"
 fuel nodes list
-for i in `fuel env | grep  -v -e '\-\-\-' -e 'id' | awk '{print $1}'` ; do fuel env --env-id ${i} delete ; done
+for i in `fuel env | grep  -v -e '\-\-\-' -e 'id' | awk '{print $1}'` ; do fuel env --env-id ${i} delete --force ; done
 
 sleep 10
 
