@@ -7,7 +7,7 @@ function install_fpb {
  #  easy_pip install
 }
 
-
+#==================================================================================
 # BODY
 # Preparing new environment for att, upload repos, reinstall plugin, recreate env
 
@@ -22,10 +22,12 @@ echo "-----------------"
 
 echo -e "\nArchiving targetimages:"
 mkdir -p /var/www/nailgun/targetimages/copy
-rm -f /var/www/nailgun/targetimages/copy/*
 cd /var/www/nailgun/targetimages
 env_no=`ls | grep yaml | head -1 | cut -d"_" -f2`
-mv /var/www/nailgun/targetimages/env_${env_no}_* /var/www/nailgun/targetimages/copy/
+if [[ -n $env_no ]] ; then     
+  rm -f /var/www/nailgun/targetimages/copy/* ;  
+  mv /var/www/nailgun/targetimages/env_${env_no}_* /var/www/nailgun/targetimages/copy/ ;
+fi
 cd -
 
 echo -e "\nDeleting all environments:"
