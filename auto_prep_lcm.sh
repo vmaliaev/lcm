@@ -1,9 +1,10 @@
 #!/bin/bash
 
 # Functions
-function install_fpb() {
-#  apt-get -y git easy_pip ....
-#  easy_pip install
+function install_fpb {
+ echo "Installing fpb on CentOS"
+ #  apt-get -y git easy_pip ....
+ #  easy_pip install
 }
 
 
