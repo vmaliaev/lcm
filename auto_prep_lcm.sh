@@ -56,7 +56,7 @@ echo -e "\nUpload ATT repos:"
 fuel settings --env-id $e download --dir ~/
 sed "/service_user/i \\
       - name: extra-0\\
-        priority: 1150\\
+        priority: 2150\\
         section: main\\
         suite: trusty\\
         type: deb\\
