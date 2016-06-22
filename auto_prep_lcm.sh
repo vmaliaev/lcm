@@ -2,16 +2,44 @@
 
 # Functions
 function install_fpb {
+ 
+ if [[ x`file /usr/bin/fpb | grep script` != x  ]] ; then echo "Fuel is already prepared, fpb is installed, skipping install_fpb";  echo "Use argument [ $0 -f ] to reinstall fpb"; 
+   if [[ x$1 != x"-f"  ]] ; then sleep 1; return ; fi ; 
+ fi
+
  echo "Installing fpb on CentOS"
- #  apt-get -y git easy_pip ....
- #  easy_pip install
+ for i in `seq 1 100` ; do echo -en . ; sleep 0.01 ; done ; echo ""
+
+ directory_init=`pwd` 
+ cd ~/
+
+ yum -y install createrepo dpkg-devel dpkg-dev rpm rpm-build
+ easy_install pip
+ pip install fuel-plugin-builder
+
+ if [[ x$1 == x"-f"  ]] ; then rm -rf fuel-plugins ; fi ; 
+
+ git clone https://github.com/stackforge/fuel-plugins.git
+ cd fuel-plugins
+ if [[ `echo $?` -ne 0 ]] ; then echo "Error, can not execute cd fuel-plugins. Exit"; exit 1 ; fi 
+
+ python setup.py install
+
+ echo "Finish. Returnig to initial directory."
+ cd $directory_init
+ echo "!!!!!!!!!!!!!!!!!!!!!!!SUCCESS!!!!!!!!!!!!!!!!!!!!!"
+ sleep 1
 }
 
 #==================================================================================
 # BODY
 # Preparing new environment for att, upload repos, reinstall plugin, recreate env
+echo "Use argument [ $0 -p ] to prepare FUEL"
 
-#install_fpb #Uncomment it on new environment
+install_fpb $1 ; # echo "!!!!!!!!!!!!!!!!SUCCESS. Before proceed comment install_fpb call!!!!!!!!!!!!!!!!" ; exit 0 ; #Uncomment it on new environment
+
+if [[ x$1 == x"-p"  ]] ; then echo "Preparing Completed......" ; exit 0 ; fi ;
+if [[ x$1 == x"-f"  ]] ; then echo "FPB is reinstalled......" ; exit 0 ; fi ;
 
 if [ `ls * | grep -c fuel-plugin-lcm-1.0-1.0.0-1.noarch.rpm` -eq 0 ] ; then echo "ERROR: Change directory to containted fuel-plugin-lcm-1.0-1.0.0-1.noarch.rpm"; echo "Exiting..." ; exit 1 ; fi
 
