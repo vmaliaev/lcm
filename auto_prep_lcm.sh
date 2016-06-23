@@ -41,9 +41,7 @@ install_fpb $1 ; # echo "!!!!!!!!!!!!!!!!SUCCESS. Before proceed comment install
 if [[ x$1 == x"-p"  ]] ; then echo "Preparing Completed......" ; exit 0 ; fi ;
 if [[ x$1 == x"-f"  ]] ; then echo "FPB is reinstalled......" ; exit 0 ; fi ;
 
-if [ `ls * | grep -c fuel-plugin-lcm-1.0-1.0.0-1.noarch.rpm` -eq 0 ] ; then echo "ERROR: Change directory to containted fuel-plugin-lcm-1.0-1.0.0-1.noarch.rpm"; echo "Exiting..." ; exit 1 ; fi
-
-
+if [ `ls * | grep -c -E 'fuel-plugin-lcm([-0-9.]*).noarch.rpm'` -eq 0 ] ; then echo "ERROR: Change directory to containted fuel-plugin-lcm*.noarch.rpm"; echo "Exiting..." ; exit 1 ; fi
 
 echo -e "\nPreparing new ENV"
 echo "-----------------"
@@ -61,14 +59,14 @@ cd -
 echo -e "\nDeleting all environments:"
 fuel nodes list
 for i in `fuel env | grep  -v -e '\-\-\-' -e 'id' | awk '{print $1}'` ; do fuel env --env-id ${i} delete --force ; done
-
-sleep 10
+while [[ `fuel env | grep -v id | grep -v "\-\-\-" | grep "|" | wc -l` -ne 0  ]] ; do echo "Waiting for deleting all the environments";  sleep 1 ; done
 
 echo -e "\nDeleting plugin:"
-fuel plugins --remove fuel-plugin-lcm==1.0.0
+oldvers=`fuel plugins | grep fuel-plugin-lcm | awk -F"|" '{print $3}' | grep -Eo [0-9.]*`
+fuel plugins --remove fuel-plugin-lcm==${oldvers}
 
 echo -e "\nInstalling plugin:"
-fuel plugins --install fuel-plugin-lcm-1.0-1.0.0-1.noarch.rpm
+fuel plugins --install `ls | grep fuel-plugin-lcm-*.rpm`
 
 echo -e "\nCreating env --name AUTOENV:"
 fuel env create --name AUTOENV --rel 2 --net-segment-type vlan
@@ -84,7 +82,7 @@ echo -e "\nUpload ATT repos:"
 fuel settings --env-id $e download --dir ~/
 sed "/service_user/i \\
       - name: extra-0\\
-        priority: 2150\\
+        priority: 1150\\
         section: main\\
         suite: trusty\\
         type: deb\\
@@ -125,5 +123,3 @@ ips=`echo ${ips} | rev | cut -c 2- | rev`
 fuel node
 echo -e "\nfuel node --env-id=${e} --node-id=${ips} --provision; sleep 300; fuel node --env-id=${e} --node-id=${ips} --deploy"
 echo 'mco rpc execute_shell_command execute cmd="echo sudo -i>>/var/lib/fuel/.profile"'
-
-
